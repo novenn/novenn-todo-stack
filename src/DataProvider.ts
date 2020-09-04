@@ -5,7 +5,6 @@ export class DataProvider implements vscode.TreeDataProvider<Dependency> {
 	readonly onDidChangeTreeData: vscode.Event<Dependency | undefined | void> = this._onDidChangeTreeData.event;
 
     constructor() {
-		console.log('%%%%%%%%%%%%%%%%%');
     }
     
     refresh(): void {
@@ -17,7 +16,6 @@ export class DataProvider implements vscode.TreeDataProvider<Dependency> {
     }
     
     getChildren(element?: Dependency): Thenable<Dependency[]> {
-		console.log('%%%%%%%%%%%%%%%%%222');
 		return Promise.resolve([
 			new Dependency("zhang san", '1.0.0', vscode.TreeItemCollapsibleState.Collapsed),
 			new Dependency("zhang san", '1.0.0', vscode.TreeItemCollapsibleState.Collapsed),

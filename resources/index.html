@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    {{style}}
+</head>
+<body>
+   <div class="main" id="app">
+        <div class="nav">
+            <div class="nav__header">
+                <img src="logo.svg" class="nav__header__logo"/>
+                <span  class="nav__header__title">TODO STACK</span>
+            </div>
+            <div class="nav__body" id="list-container">
+                <div class="nav__body__list" 
+                :class="{'active': selectedListUid === item.uid}" 
+                v-for="item in stackArr" 
+                :key="item.uid"
+                @click="handleSelectList(item.uid)">
+                    <img src="logo.svg" alt="" class="icon">
+                    <div class="name">{{item.name}}</div>
+                    <div class="count">{{item.done || 0}}/{{item.done || 0}}</div>
+                </div>
+            </div>
+            <div class="nav__footer" @click="handleAddList">
+                <span style="font-size: 18px; line-height: 18px; margin-right: 10px">+</span>
+                <span>Add List</span>
+            </div>
+        </div>
+        <div class="container">
+            <template v-if="selectedListInfo">
+                <div class="container__header">
+                    <input :value="selectedListInfo.name" />
+                </div>
+            </template>
+        </div>
+        <div class="detail">
+
+        </div>
+   </div>
+</body>
+<script src="{{vue.min.js}}"></script>
+<script>{{code}}</script>
+</html>
