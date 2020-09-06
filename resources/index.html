@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link rel="shortcut icon" href="favico.svg" type="image/x-icon">
+    <title>Todo Stack</title>
     {{style}}
 </head>
 <body>
@@ -11,34 +12,115 @@
         <div class="nav">
             <div class="nav__header">
                 <img src="logo.svg" class="nav__header__logo"/>
-                <span  class="nav__header__title">TODO STACK</span>
             </div>
-            <div class="nav__body" id="list-container">
+            <div class="nav__body" id="list-container" v-if="stackArr && stackArr.length">
                 <div class="nav__body__list" 
                 :class="{'active': selectedListUid === item.uid}" 
                 v-for="item in stackArr" 
                 :key="item.uid"
                 @click="handleSelectList(item.uid)">
-                    <img src="logo.svg" alt="" class="icon">
+                    <img src="list.svg" alt="" class="icon">
                     <div class="name">{{item.name}}</div>
-                    <div class="count">{{item.done || 0}}/{{item.done || 0}}</div>
+                    <div class="count">{{item.done || 0}}/{{item.total || 0}}</div>
+                    <img src="remove.svg" alt="" class="remove" @click="handleRemoveList">
                 </div>
             </div>
+            <div v-else class="nav__body" style="display: flex; justify-content: center; align-items: center;">
+                <img src="empty.svg" style="width: 80%; max-width: 120px; margin:auto; opacity: 0.1;"/>
+            </div>
             <div class="nav__footer" @click="handleAddList">
-                <span style="font-size: 18px; line-height: 18px; margin-right: 10px">+</span>
-                <span>Add List</span>
+                <span style="font-size: 28px; margin:-5px 20px 0 0;">+</span>
+                <span>Create List</span>
             </div>
         </div>
-        <div class="container">
+        <div class="container" v-if="selectedListInfo">
             <template v-if="selectedListInfo">
                 <div class="container__header">
-                    <input :value="selectedListInfo.name" />
+                    <input v-model="selectedListInfo.name" @blur="handleUpdataListName" @keyup.enter="handleUpdataListName" placeholder="Edit list name here and press 'enter' to save" />
+                </div>
+                <div class="container__body" v-if="selectedTaskList && selectedTaskList.length">
+                    <!---undo list-->
+                    <div class="progress" v-if="selectedListInfo.total">
+                        <div class="progress__bar">
+                            <div class="progress__bar__inner" :style="{width: (selectedListInfo.done * 100 / selectedListInfo.total) + '%'}"></div>
+                        </div>
+                        <div class="progress__content">{{selectedListInfo.done}} / {{selectedListInfo.total}}</div>  
+                    </div>
+                    <div
+                        v-for="event in undoTaskList"
+                        :key="event.uid" 
+                        @click="handleSelectEvent(event)"
+                        :class="{'checked': event.uid === selectedEventUid}"
+                        class="container__body__event">
+                        <div class="event__body">
+                            <div class="checkbox" 
+                                @click.stop="handleToggleEventStatus(event)"
+                                :class="{'checked': STATUS.DONE===event.status}"></div>
+                            <div class="event__content">
+                                {{event.content}}
+                            </div>
+                        </div>
+                        <div class="event__footer" v-if="event.createTime">
+                            <div>
+                                Create At: {{event.createTime | dataformat('yyyy-MM-dd HH:mm')}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!---done list-->
+                    <div
+                        v-for="event in doneTaskList"
+                        :key="event.uid" 
+                        @click="handleSelectEvent(event)"
+                        :class="{'checked': event.uid === selectedEventUid}"
+                        class="container__body__event done">
+                        <div class="event__body">
+                            <div class="checkbox" 
+                                @click.stop="handleToggleEventStatus(event)"
+                                :class="{'checked': STATUS.DONE===event.status}"></div>
+                            <div class="event__content">
+                                {{event.content}}
+                            </div>
+                        </div>
+                        <div class="event__footer" v-if="event.createTime">
+                            <div>
+                                Create At: {{event.createTime | dataformat('yyyy-MM-dd HH:mm')}}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div v-else class="container__body" style="display:flex; justify-content: center; align-items: center;">
+                    <img src="empty.svg" style="width: 80%; max-width: 200px; margin:auto; opacity: 0.1;"/>
+                </div>
+                <div class="container__footer">
+                    <input type="text" placeholder="Input task name here and press 'enter' to save" v-model="newEventContent" @keyup.enter="handleNewEvent">
                 </div>
             </template>
         </div>
-        <div class="detail">
-
+        <div v-else class="container" style="justify-content: center; align-items: center;">
+            <img src="empty.svg"  style="width: 80%; max-width: 200px; margin:auto; opacity: 0.1;"/>
         </div>
+        <template v-if="selectedEvent">
+            <div class="detail">
+                <div class="detail__header">
+                    <div class="checkbox" 
+                        @click="handleToggleEventStatus(selectedEvent)" 
+                        :class="{'checked': STATUS.DONE===selectedEvent.status}"
+                        style="margin-top: 4px;"></div>
+                    <div class="textarea" contenteditable="true" data-text="Edit task..." @blur="handleEditEventNameChange">{{selectedEvent.content}}</div>
+                </div>
+                <div class="detail__body">
+                    <textarea v-model="selectedEvent.remarks" @blur="handleEditEvent" placeholder="Edit remarks..."></textarea>
+                </div>
+                <div class="detail__footer">
+                    <div>Upadate At: {{selectedEvent.updateTime | dataformat('yyyy-MM-dd HH:mm')}}</div>
+                    <img class="remove" src="remove.svg" @click="handleRemoveEvent"/>
+                </div>
+            </div>
+        </template>
+
+        <modal ref="modal"></modal>
    </div>
 </body>
 <script src="{{vue.min.js}}"></script>

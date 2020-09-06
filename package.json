@@ -1,8 +1,11 @@
 {
 	"name": "novenn-todo-stack",
 	"displayName": "Todo Stack",
-	"description": "",
-	"version": "0.0.1",
+	"description": "A Visuable Todolist Extension",
+	"version": "0.0.9",
+	"publisher": "novenn",
+	"icon": "resources/favicon.png",
+	"repository": " https://github.com/novenn/novenn-todo-stack.git",
 	"engines": {
 		"vscode": "^1.48.0"
 	},
@@ -19,26 +22,7 @@
 				"command": "todo-stack.open",
 				"title": "Todo Stack"
 			}
-		],
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "todo-stack",
-					"title": "Todo Book",
-					"icon": "resources/icon.svg"
-				}
-			]
-		},
-		"views": {
-			"todo-stack": [
-				{
-					"id": "todo-stack",
-					"name": "LIST",
-					"icon": "resources/icon.svg",
-					"contextualTitle": "Package Explorer"
-				}
-			]
-		}
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "yarn run compile",
