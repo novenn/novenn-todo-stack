@@ -2,7 +2,7 @@
 	"name": "novenn-todo-stack",
 	"displayName": "Todo Stack",
 	"description": "A Visuable Todolist Extension",
-	"version": "0.0.9",
+	"version": "0.0.1",
 	"publisher": "novenn",
 	"icon": "resources/favicon.png",
 	"repository": " https://github.com/novenn/novenn-todo-stack.git",

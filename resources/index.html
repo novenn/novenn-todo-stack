@@ -13,11 +13,12 @@
             <div class="nav__header">
                 <img src="logo.svg" class="nav__header__logo"/>
             </div>
-            <div class="nav__body" id="list-container" v-if="stackArr && stackArr.length">
+            <div class="nav__body" id="list-container" ref="listContainer" v-if="stackArr && stackArr.length">
                 <div class="nav__body__list" 
                 :class="{'active': selectedListUid === item.uid}" 
                 v-for="item in stackArr" 
                 :key="item.uid"
+                :data-uid="item.uid"
                 @click="handleSelectList(item.uid)">
                     <img src="list.svg" alt="" class="icon">
                     <div class="name">{{item.name}}</div>
@@ -124,5 +125,6 @@
    </div>
 </body>
 <script src="{{vue.min.js}}"></script>
+<script src="{{sortable.min.js}}"></script>
 <script>{{code}}</script>
 </html>

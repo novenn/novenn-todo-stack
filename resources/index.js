@@ -6,6 +6,7 @@ const EVENTS = {
     GET_LIST: 'GET_LIST',
     REMOVE_LIST: 'REMOVE_LIST',
     REMOVE_EVENT: 'REMOVE_EVENT',
+    UPDATE_LIST_ORDER: 'UPDATE_LIST_ORDER'
 };
 
 const STATUS = {
@@ -60,8 +61,8 @@ window.onload = () => {
         computed: {
             stackArr() {
                 const  stack = Object.values(this.stack);
-                const undoStack = stack.filter(item => item.done !== item.total).sort((a, b) => b.createTime - b.createTime);
-                const doneStack = stack.filter(item => item.done === item.total).sort((a, b) => b.createTime - b.createTime);
+                return stack.sort((a, b) => a.order - b.order);
+                const doneStack = stack.filter(item => item.done === item.total).sort((a, b) => b.order - a.order);
                 return [...undoStack, ...doneStack];
             },
             selectedListInfo() {
@@ -85,6 +86,33 @@ window.onload = () => {
         watch: {
             selectedListInfo() {
                 this.updateList();
+            },
+            stackArr: {
+                immediate: true,
+                handler() {
+                    this.$nextTick(() => {
+                        const container =  document.querySelector('#list-container')
+                        if(this.stackArr && this.stackArr.length && container){
+                            new Sortable(container, {
+                                sort: true,
+                                draggable: ".nav__body__list",
+                                animation: 550, 
+                                easing: "cubic-bezier(1, 0, 0, 1)", 
+                                onUpdate:  () => { 
+                                    const list = container.querySelectorAll('.nav__body__list');
+                                    const listUidOrder = [];
+                                    Array.prototype.forEach.call(list, function(item){
+                                        if(item.dataset && item.dataset.uid) {
+                                            listUidOrder.push(item.dataset.uid);
+                                        }
+                                    });
+
+                                    this.updateListOrder(listUidOrder);
+                                },
+                            });
+                        }
+                    });
+                }
             }
         },
         filters: {
@@ -180,7 +208,7 @@ window.onload = () => {
                 }
             },
             handleAddList() {
-                this.handleSaveList({name: 'New List'});
+                this.handleSaveList({name: 'New List', order: this.stackArr.length});
             },
             handleSelectList(uid) {
                 this.selectedListUid = uid;
@@ -222,6 +250,17 @@ window.onload = () => {
                     this.selectedTaskList = res.data;
                 });
             },
+            updateListOrder(listUidOrder = []) {
+                request(EVENTS.UPDATE_LIST_ORDER, {
+                    listUidOrder
+                }).then(res => {
+                    setTimeout(() => {
+                        listUidOrder.forEach((uid, index) => {
+                            this.stack[uid].order = index;
+                        });
+                    }, 1000);
+                });
+            },
             handleToggleEventStatus(event) {
                 const status = event.status === STATUS.DONE ? STATUS.UNDO : STATUS.DONE;
                 request(EVENTS.SAVE_EVENT,
@@ -236,12 +275,9 @@ window.onload = () => {
                     event.status = status;
                 });
             },
-            handlechange(event) {
-                console.log(event.target.innerText)
-            },
             handleEditEventNameChange(event) {
                 let content = event.target.innerText|| '';
-                content = content.replace(/\t|\r|\n/g, '\s');
+                content = content.replace(/\t|\r|\n/g, ' ');
                 this.selectedEvent.content = content;
                 this.handleEditEvent();
             },

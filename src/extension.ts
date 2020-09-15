@@ -8,7 +8,8 @@ const EVENTS = {
 	SAVE_EVENT: 'SAVE_EVENT',
 	GET_LIST: 'GET_LIST',
 	REMOVE_LIST: 'REMOVE_LIST',
-    REMOVE_EVENT: 'REMOVE_EVENT',
+	REMOVE_EVENT: 'REMOVE_EVENT',
+	UPDATE_LIST_ORDER: 'UPDATE_LIST_ORDER'
 };
 
 const STATUS = {
@@ -35,7 +36,6 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		);
 		try {
-	
 			panel.webview.html = buildHtml(context, panel.webview);
 			panel.webview.onDidReceiveMessage((request) => {
 				dispatchEvent(request, panel.webview.postMessage.bind(panel.webview));
@@ -77,6 +77,7 @@ function buildHtml(context: vscode.ExtensionContext, webview: vscode.Webview) {
 		js = `const resources = ${JSON.stringify(resources)};${js}`;
 		html = html.replace('{{code}}', js);
 		html = html.replace('{{vue.min.js}}', webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'lib', 'vue.min.js')).toString());
+		html = html.replace('{{sortable.min.js}}', webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'lib', 'sortable.min.js')).toString());
 		html = html.replace('{{style}}', `<style>${css}</style>`);
 		return html;
 	} catch (error) {
@@ -95,6 +96,7 @@ function dispatchEvent({event, data, requestId}: {event:String, requestId:String
 			case EVENTS.GET_LIST: ret = handleGetList(data); break;
 			case EVENTS.REMOVE_LIST: ret = handleRemoveList(data); break;
 			case EVENTS.REMOVE_EVENT: ret = handleRemoveEvent(data); break;
+			case EVENTS.UPDATE_LIST_ORDER: ret = handleUpdateListOrder(data); break;
 		}
 	
 		response({
@@ -115,9 +117,10 @@ function getDBPath(uid:string) {
 function handleEditListMetaInfo(data: {
 	uid: string,
 	name: string,
+	order: number,
 }) {
 	const stack:any = getStack();
-	let {uid, name} = data;
+	let {uid, name, order} = data;
 	let list = stack[uid];
 	if(!uid || !list) {
 		uid = md5(Date.now() + Math.random()).toUpperCase();
@@ -128,10 +131,11 @@ function handleEditListMetaInfo(data: {
 			name,
 			done: 0,
 			total: 0,
-			createTime: Date.now()
+			createTime: Date.now(),
+			order
 		};
 	} else {
-		list = Object.assign({}, list, {name});
+		list = Object.assign({}, list, {name, order});
 	}
 	updateStack(uid, list);
 	return uid;
@@ -210,6 +214,15 @@ function handleRemoveEvent(data: any) {
 	return;
 }
 
+function handleUpdateListOrder(listUidOrder: Array<string>) {
+	const stack = getStack();
+	listUidOrder.forEach((uid:string, index:number) => {
+		stack[uid]['order'] = index;
+	});
+
+	setStack(stack);
+}
+
 function createRootDirIfNeed() {
 	// TODO handle rootDir === undefined
 	if(!fs.existsSync(rootDir)) {
@@ -247,6 +260,13 @@ function getStack() {
 		cache['stack'] = stack;
 	}
 	return cache['stack']['stack'];
+}
+
+function setStack(stack: any) {
+	stack = {stack: stack};
+	const stackJsonFile = path.resolve(rootDir, 'stack.json');
+	fs.writeFileSync(stackJsonFile, JSON.stringify(stack, null, 2), 'utf-8');
+	cache['stack'] = stack;
 }
 
 function getList(path: string) {
